@@ -37,7 +37,7 @@ class MongoDBServiceProvider implements ServiceProviderInterface
             return key($options);
         };
 
-        $app['mongodb.connections.options_initializer'] = $app->protect(function(Container $app) {
+        $app['mongodb.connections.options_initializer'] = $app->protect(function() use ($app) {
             static $optionsInitialized = false;
 
             if ($optionsInitialized) {
@@ -45,7 +45,6 @@ class MongoDBServiceProvider implements ServiceProviderInterface
             }
 
             if (empty($app['mongodb.options.connections'])) {
-
                 if (isset($app['mongodb.options.connection'])) {
                     $defaultConnectionOptions = $app['mongodb.options.connection'];
                 } else {
@@ -60,7 +59,7 @@ class MongoDBServiceProvider implements ServiceProviderInterface
             $optionsInitialized = true;
         });
 
-        $app['mongodb.dbs.options_initializer'] = $app->protect(function() {
+        $app['mongodb.dbs.options_initializer'] = $app->protect(function() use ($app) {
             static $optionsInitialized = false;
 
             if ($optionsInitialized) {
@@ -78,6 +77,8 @@ class MongoDBServiceProvider implements ServiceProviderInterface
                     'default' => $defaultDbOptions,
                 ];
             }
+
+            $optionsInitialized = true;
         });
 
         $app['mongodb.config.connections'] = function (Container $app) {
