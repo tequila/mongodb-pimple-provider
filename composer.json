@@ -1,0 +1,22 @@
+{
+    "name": "tequila/mongodb-odm-silex-provider",
+    "description": "Tequila MongoDB PHP Lib (high-level mongodb driver) Silex service provider",
+    "type": "library",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "silex/silex": "^2.0",
+        "tequila/mongodb-php-lib": "dev-master",
+        "tequila/bridge": "dev-master"
+    },
+    "autoload": {
+        "psr-4": { "Tequila\\Silex\\Provider\\": "src/" }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Petr Buchin",
+            "email": "petrbuchyn@gmail.com"
+        }
+    ]
+}
