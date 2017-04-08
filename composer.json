@@ -1,5 +1,5 @@
 {
-    "name": "tequila/mongodb-odm-silex-provider",
+    "name": "tequila/mongodb-silex-provider",
     "description": "Tequila MongoDB PHP Lib (high-level mongodb driver) Silex service provider",
     "type": "library",
     "minimum-stability": "dev",
