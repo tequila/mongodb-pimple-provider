@@ -2,11 +2,11 @@
 
 namespace Tequila\Silex\Provider\Tests;
 
-use MongoDB\Driver\ReadConcern;
 use PHPUnit\Framework\TestCase;
 use Pimple\Container;
 use Tequila\Bridge\ConnectionConfiguration;
 use Tequila\MongoDB\Client;
+use Tequila\MongoDB\Database;
 use Tequila\Silex\Provider\MongoDBServiceProvider;
 
 class MongoDBServiceProviderTest extends TestCase
@@ -200,6 +200,34 @@ class MongoDBServiceProviderTest extends TestCase
 
         $app['mongodb.options.default_connection'] = 'default';
         $this->assertSame($app['mongodb.client'], $app['mongodb.clients']['default']);
+    }
+
+    public function testMongoDBDbsReturnsDatabaseForEachConfiguredDatabase()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.dbs'] = [
+            'default' => ['name' => 'default'],
+            'archive' => ['name' => 'archive'],
+            'another_one' => ['name' => 'another_one'],
+        ];
+
+        foreach ($app['mongodb.options.dbs'] as $alias => $options) {
+            $this->assertTrue($app['mongodb.dbs'][$alias] instanceof Database);
+        }
+    }
+
+    public function testMongoDBDbReturnsDefaultDb()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.dbs'] = [
+            'archive' => ['name' => 'archive'],
+            'default' => ['name' => 'default'],
+            'another_one' => ['name' => 'another_one'],
+        ];
+
+        $app['mongodb.options.default_db'] = 'default';
+
+        $this->assertSame($app['mongodb.db'], $app['mongodb.dbs']['default']);
     }
 
     private function createApp()
