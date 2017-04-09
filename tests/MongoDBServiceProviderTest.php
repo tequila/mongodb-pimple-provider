@@ -2,8 +2,11 @@
 
 namespace Tequila\Silex\Provider\Tests;
 
+use MongoDB\Driver\ReadConcern;
 use PHPUnit\Framework\TestCase;
 use Pimple\Container;
+use Tequila\Bridge\ConnectionConfiguration;
+use Tequila\MongoDB\Client;
 use Tequila\Silex\Provider\MongoDBServiceProvider;
 
 class MongoDBServiceProviderTest extends TestCase
@@ -50,14 +53,14 @@ class MongoDBServiceProviderTest extends TestCase
         $this->assertFalse(isset($app['mongodb.options.connections']));
     }
 
-    public function testMongoDBCofigDefaultConnectionNameReturnsFirstConnectionNameIfNotSpecified()
+    public function testMongoDBConfigDefaultConnectionNameReturnsFirstConnectionNameIfNotSpecified()
     {
         $app = $this->createApp();
 
         $this->assertEquals('default', $app['mongodb.config.default_connection_name']);
     }
 
-    public function testMongoDBCofigDefaultConnectionNameReturnsFirstConnectionNameIfNotSpecified2()
+    public function testMongoDBConfigDefaultConnectionNameReturnsFirstConnectionNameIfNotSpecified2()
     {
         $app = $this->createApp();
         $app['mongodb.options.connections'] = ['first' => []];
@@ -65,7 +68,7 @@ class MongoDBServiceProviderTest extends TestCase
         $this->assertEquals('first', $app['mongodb.config.default_connection_name']);
     }
 
-    public function testMongoDBCofigDefaultConnectionNameReturnsOptionIfSpecified()
+    public function testMongoDBConfigDefaultConnectionNameReturnsOptionIfSpecified()
     {
         $app = $this->createApp();
         $app['mongodb.options.default_connection'] = 'defaultConnection';
@@ -73,7 +76,7 @@ class MongoDBServiceProviderTest extends TestCase
         $this->assertEquals('defaultConnection', $app['mongodb.config.default_connection_name']);
     }
 
-    public function testMongoDBCofigDefaultConnectionNameReturnsOptionIfSpecified2()
+    public function testMongoDBConfigDefaultConnectionNameReturnsOptionIfSpecified2()
     {
         $app = $this->createApp();
         $app['mongodb.options.default_connection'] = 'defaultConnection';
@@ -122,6 +125,81 @@ class MongoDBServiceProviderTest extends TestCase
         $app['mongodb.dbs.options_initializer']();
 
         $this->assertFalse(isset($app['mongodb.options.dbs']));
+    }
+
+    public function testMongoDBConfigDefaultDbNameReturnsFirstDbAliasIfNotSpecified()
+    {
+        $app = $this->createApp();
+
+        $this->assertEquals('default', $app['mongodb.config.default_db_name']);
+    }
+
+    public function testMongoDBConfigDefaultDbNameReturnsFirstDbAliasIfNotSpecified2()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.dbs'] = ['first' => []];
+
+        $this->assertEquals('first', $app['mongodb.config.default_db_name']);
+    }
+
+    public function testMongoDBConfigDefaultDbNameReturnsOptionIfSpecified()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.default_db'] = 'defaultDb';
+
+        $this->assertEquals('defaultDb', $app['mongodb.config.default_db_name']);
+    }
+
+    public function testMongoDBConfigDefaultDbNameReturnsOptionIfSpecified2()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.default_db'] = 'defaultDb';
+        $app['mongodb.options.connections'] = ['first' => []];
+
+        $this->assertEquals('defaultDb', $app['mongodb.config.default_db_name']);
+    }
+
+    public function testMongoDbConfigConnectionsReturnsConfigurationForEachConnection()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.connections'] = [
+            'default' => [],
+            'archive' => [],
+            'another_one' => ['foo'],
+        ];
+
+        foreach ($app['mongodb.options.connections'] as $name => $options) {
+            $config = $app['mongodb.config.connections'][$name];
+            $this->assertTrue($config instanceof ConnectionConfiguration);
+        }
+    }
+
+    public function testMongoDbClientsReturnsClientForEachConnectionOption()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.connections'] = [
+            'default' => [],
+            'archive' => [],
+            'another_one' => ['foo'],
+        ];
+
+        foreach ($app['mongodb.options.connections'] as $name => $options) {
+            $client = $app['mongodb.clients'][$name];
+            $this->assertTrue($client instanceof Client);
+        }
+    }
+
+    public function testMongoDBClientReturnsDefaultClient()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.connections'] = [
+            'archive' => [],
+            'default' => [],
+            'another_one' => ['foo'],
+        ];
+
+        $app['mongodb.options.default_connection'] = 'default';
+        $this->assertSame($app['mongodb.client'], $app['mongodb.clients']['default']);
     }
 
     private function createApp()

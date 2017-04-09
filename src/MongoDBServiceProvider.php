@@ -112,6 +112,8 @@ class MongoDBServiceProvider implements ServiceProviderInterface
                     return new Client($manager, $config->getClientOptions());
                 };
             }
+
+            return $clients;
         };
 
         $app['mongodb.client'] = function (Container $app) {
