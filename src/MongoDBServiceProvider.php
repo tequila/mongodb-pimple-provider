@@ -4,10 +4,8 @@ namespace Tequila\Silex\Provider;
 
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
-use Tequila\Bridge\ConnectionConfiguration;
 use Tequila\Bridge\Exception\ConfigurationException;
 use Tequila\MongoDB\Client;
-use Tequila\MongoDB\Manager;
 
 class MongoDBServiceProvider implements ServiceProviderInterface
 {
@@ -44,17 +42,29 @@ class MongoDBServiceProvider implements ServiceProviderInterface
                 return;
             }
 
+            $defaultOptions = [
+                'uri' => 'mongodb://127.0.0.1/',
+                'uriOptions' => [],
+                'driverOptions' => [],
+            ];
+
             if (empty($app['mongodb.options.connections'])) {
                 if (isset($app['mongodb.options.connection'])) {
                     $defaultConnectionOptions = $app['mongodb.options.connection'];
                 } else {
-                    $defaultConnectionOptions = ['uri' => 'mongodb://127.0.0.1/'];
+                    $defaultConnectionOptions = $defaultOptions;
                 }
 
                 $app['mongodb.options.connections'] = [
                     'default' => $defaultConnectionOptions,
                 ];
             }
+
+            $connectionsOptions = $app['mongodb.options.connections'];
+            foreach ($connectionsOptions as $name => &$connectionOptions) {
+                $connectionOptions = array_replace($defaultOptions, $connectionOptions);
+            }
+            $app['mongodb.options.connections'] = $connectionsOptions;
 
             $optionsInitialized = true;
         });
@@ -81,35 +91,17 @@ class MongoDBServiceProvider implements ServiceProviderInterface
             $optionsInitialized = true;
         });
 
-        $app['mongodb.config.connections'] = function (Container $app) {
-            $app['mongodb.connections.options_initializer']();
-
-            $config = new Container();
-            foreach ($app['mongodb.options.connections'] as $name => $options) {
-                $config[$name] = function() use ($name, $options) {
-                    return new ConnectionConfiguration($name, $options);
-                };
-            }
-
-            return $config;
-        };
-
         $app['mongodb.clients'] = function (Container $app) {
             $app['mongodb.connections.options_initializer']();
 
             $clients = new Container();
             foreach ($app['mongodb.options.connections'] as $name => $options) {
                 $clients[$name] = function () use ($app, $name, $options) {
-                    /** @var ConnectionConfiguration $config */
-                    $config = $app['mongodb.config.connections'][$name];
-
-                    $manager = new Manager(
-                        $config->getUri(),
-                        $config->getUriOptions(),
-                        $config->getDriverOptions()
+                    return new Client(
+                        $options['uri'],
+                        $options['uriOptions'],
+                        $options['driverOptions']
                     );
-
-                    return new Client($manager, $config->getClientOptions());
                 };
             }
 

@@ -4,31 +4,39 @@ namespace Tequila\Silex\Provider\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Pimple\Container;
-use Tequila\Bridge\ConnectionConfiguration;
 use Tequila\MongoDB\Client;
 use Tequila\MongoDB\Database;
 use Tequila\Silex\Provider\MongoDBServiceProvider;
 
 class MongoDBServiceProviderTest extends TestCase
 {
-    public function testMongoDBConnectionsOptionsInitializerDoesNothingWhenOptionsProvided()
-    {
-        $app = $this->createApp();
-        $app['mongodb.options.connections'] = ['something'];
-        $app['mongodb.connections.options_initializer']();
-
-        $this->assertEquals(['something'], $app['mongodb.options.connections']);
-    }
-
     public function testMongoDBConnectionsOptionsInitializerCreatesDefaultOptions()
     {
         $app = $this->createApp();
         $app['mongodb.connections.options_initializer']();
         $expected = [
-            'default' => ['uri' => 'mongodb://127.0.0.1/'],
+            'default' => ['uri' => 'mongodb://127.0.0.1/', 'uriOptions' => [], 'driverOptions' => []],
         ];
 
         $this->assertEquals($expected, $app['mongodb.options.connections']);
+    }
+
+    public function testMongoDbConnectionsOptionsInitializerCreatesDefaultOptionsForEachConnection()
+    {
+        $app = $this->createApp();
+        $app['mongodb.options.connections'] = [
+            'default' => [],
+            'archive' => [],
+            'another_one' => ['foo'],
+        ];
+
+        $app['mongodb.connections.options_initializer']();
+
+        foreach ($app['mongodb.options.connections'] as $name => $options) {
+            $this->assertArrayHasKey('uri', $options);
+            $this->assertArrayHasKey('uriOptions', $options);
+            $this->assertArrayHasKey('driverOptions', $options);
+        }
     }
 
     public function testMongoDBConnectionsOptionsInitializerUsesConnectionOptions()
@@ -37,7 +45,7 @@ class MongoDBServiceProviderTest extends TestCase
         $app['mongodb.options.connection'] = ['uri' => 'mongodb://localhost/'];
         $app['mongodb.connections.options_initializer']();
         $expected = [
-            'default' => ['uri' => 'mongodb://localhost/'],
+            'default' => ['uri' => 'mongodb://localhost/', 'uriOptions' => [], 'driverOptions' => []],
         ];
 
         $this->assertEquals($expected, $app['mongodb.options.connections']);
@@ -157,21 +165,6 @@ class MongoDBServiceProviderTest extends TestCase
         $app['mongodb.options.connections'] = ['first' => []];
 
         $this->assertEquals('defaultDb', $app['mongodb.config.default_db_name']);
-    }
-
-    public function testMongoDbConfigConnectionsReturnsConfigurationForEachConnection()
-    {
-        $app = $this->createApp();
-        $app['mongodb.options.connections'] = [
-            'default' => [],
-            'archive' => [],
-            'another_one' => ['foo'],
-        ];
-
-        foreach ($app['mongodb.options.connections'] as $name => $options) {
-            $config = $app['mongodb.config.connections'][$name];
-            $this->assertTrue($config instanceof ConnectionConfiguration);
-        }
     }
 
     public function testMongoDbClientsReturnsClientForEachConnectionOption()

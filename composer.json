@@ -6,8 +6,7 @@
     "prefer-stable": true,
     "require": {
         "silex/silex": "^2.0",
-        "tequila/mongodb-php-lib": "dev-master",
-        "tequila/bridge": "dev-master"
+        "tequila/mongodb-php-lib": "dev-master"
     },
     "autoload": {
         "psr-4": { "Tequila\\Silex\\Provider\\": "src/" }
