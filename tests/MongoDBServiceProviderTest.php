@@ -93,21 +93,12 @@ class MongoDBServiceProviderTest extends TestCase
         $this->assertEquals('defaultConnection', $app['mongodb.config.default_connection_name']);
     }
 
-    public function testMongoDBDbsOptionsInitializerDoesNothingWhenOptionsProvided()
-    {
-        $app = $this->createApp();
-        $app['mongodb.options.dbs'] = ['something'];
-        $app['mongodb.dbs.options_initializer']();
-
-        $this->assertEquals(['something'], $app['mongodb.options.dbs']);
-    }
-
     public function testMongoDBDbsOptionsInitializerCreatesDefaultOptions()
     {
         $app = $this->createApp();
         $app['mongodb.dbs.options_initializer']();
         $expected = [
-            'default' => ['name' => 'default'],
+            'default' => ['name' => 'default', 'connection' => 'default', 'options' => []],
         ];
 
         $this->assertEquals($expected, $app['mongodb.options.dbs']);
@@ -119,7 +110,7 @@ class MongoDBServiceProviderTest extends TestCase
         $app['mongodb.options.db'] = ['name' => 'dbname'];
         $app['mongodb.dbs.options_initializer']();
         $expected = [
-            'default' => ['name' => 'dbname'],
+            'default' => ['name' => 'dbname', 'connection' => 'default', 'options' => []],
         ];
 
         $this->assertEquals($expected, $app['mongodb.options.dbs']);

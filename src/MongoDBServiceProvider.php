@@ -4,7 +4,6 @@ namespace Tequila\Silex\Provider;
 
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
-use Tequila\Bridge\Exception\ConfigurationException;
 use Tequila\MongoDB\Client;
 
 class MongoDBServiceProvider implements ServiceProviderInterface
@@ -80,13 +79,23 @@ class MongoDBServiceProvider implements ServiceProviderInterface
                 if (isset($app['mongodb.options.db'])) {
                     $defaultDbOptions = $app['mongodb.options.db'];
                 } else {
-                    $defaultDbOptions = ['name' => 'default'];
+                    $defaultDbOptions = [];
                 }
 
                 $app['mongodb.options.dbs'] = [
                     'default' => $defaultDbOptions,
                 ];
             }
+
+            $dbsOptions = $app['mongodb.options.dbs'];
+            $defaultOptions = [
+                'connection' => $app['mongodb.config.default_connection_name'],
+                'options' => [],
+            ];
+            foreach ($dbsOptions as $name => &$dbOptions) {
+                $dbOptions = array_replace($defaultOptions, ['name' => $name], $dbOptions);
+            }
+            $app['mongodb.options.dbs'] = $dbsOptions;
 
             $optionsInitialized = true;
         });
@@ -121,35 +130,20 @@ class MongoDBServiceProvider implements ServiceProviderInterface
             $dbs = new Container();
             foreach ($app['mongodb.options.dbs'] as $name => $options) {
                 $dbs[$name] = function () use ($app, $name, $options) {
-                    if (!isset($options['name'])) {
-                        throw new ConfigurationException(
-                            sprintf(
-                                'Configuration for database "%s" does not contain required option "name".',
-                                $name
-                            )
-                        );
-                    }
-
-                    $dbName = $options['name'];
-                    unset($options['name']);
-
-                    $defaultConnectionName = $app['mongodb.config.default_connection_name'];
-                    if (!isset($options['connection']) || $options['connection'] === $defaultConnectionName) {
-                        $client = $app['mongodb.client'];
-                    } elseif (!isset($app['mongodb.clients'][$options['connection']])) {
-                        throw new ConfigurationException(
+                    if (!isset($app['mongodb.clients'][$options['connection']])) {
+                        throw new \LogicException(
                             sprintf(
                                 'There is no configured connection "%s" for database "%s".',
                                 $options['connection'],
                                 $name
                             )
                         );
-                    } else {
-                        $client = $app['mongodb.clients'][$options['connection']];
                     }
 
+                    $client = $app['mongodb.clients'][$options['connection']];
+
                     /** @var Client $client */
-                    return $client->selectDatabase($dbName, $options);
+                    return $client->selectDatabase($options['name'], $options['options']);
                 };
             }
 
