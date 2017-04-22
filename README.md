@@ -1,4 +1,4 @@
-# Tequila MongoDB Silex service provider
+# Tequila MongoDB Pimple service provider
 
-This library integrates [MongoDB PHP Lib](https://github.com/tequila/mongodb-php-lib)
+This library integrates [Tequila MongoDB PHP Lib](https://github.com/tequila/mongodb-php-lib)
 with the [Silex](https://silex.sensiolabs.org/) PHP framework.

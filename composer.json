@@ -1,6 +1,6 @@
 {
     "name": "tequila/mongodb-pimple-provider",
-    "description": "Tequila MongoDB PHP Lib (high-level mongodb driver) Silex service provider",
+    "description": "Tequila MongoDB PHP Lib (high-level mongodb driver) Pimple service provider",
     "type": "library",
     "minimum-stability": "dev",
     "prefer-stable": true,
