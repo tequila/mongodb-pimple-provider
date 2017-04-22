@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Pimple\Container;
 use Tequila\MongoDB\Client;
 use Tequila\MongoDB\Database;
-use Tequila\Silex\Provider\MongoDBServiceProvider;
+use Tequila\Pimple\Provider\MongoDBServiceProvider;
 
 class MongoDBServiceProviderTest extends TestCase
 {
