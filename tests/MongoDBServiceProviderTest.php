@@ -1,6 +1,6 @@
 <?php
 
-namespace Tequila\Silex\Provider\Tests;
+namespace Tequila\Pimple\Provider\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Pimple\Container;

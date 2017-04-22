@@ -1,6 +1,6 @@
 <?php
 
-namespace Tequila\Silex\Provider;
+namespace Tequila\Pimple\Provider;
 
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
