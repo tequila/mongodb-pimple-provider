@@ -105,7 +105,7 @@ class MongoDBServiceProvider implements ServiceProviderInterface
 
             $clients = new Container();
             foreach ($app['mongodb.options.connections'] as $name => $options) {
-                $clients[$name] = function () use ($app, $name, $options) {
+                $clients[$name] = function () use ($options) {
                     return new Client(
                         $options['uri'],
                         $options['uriOptions'],
