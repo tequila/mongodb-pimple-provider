@@ -2,15 +2,15 @@
 
 namespace Tequila\Pimple\Provider;
 
-use Pimple\Container;
-use Pimple\ServiceProviderInterface;
+use Silex\Application;
+use Silex\ServiceProviderInterface;
 use Tequila\MongoDB\Client;
 
 class MongoDBServiceProvider implements ServiceProviderInterface
 {
-    public function register(Container $app)
+    public function register(Application $app)
     {
-        $app['mongodb.config.default_connection_name'] = function (Container $app) {
+        $app['mongodb.config.default_connection_name'] = $app::share(function (\Pimple $app) {
             if (isset($app['mongodb.options.default_connection'])) {
                 return $app['mongodb.options.default_connection'];
             }
@@ -20,9 +20,9 @@ class MongoDBServiceProvider implements ServiceProviderInterface
 
             // first connection name is the default
             return key($options);
-        };
+        });
 
-        $app['mongodb.config.default_db_name'] = function (Container $app) {
+        $app['mongodb.config.default_db_name'] = $app::share(function (\Pimple $app) {
             if (isset($app['mongodb.options.default_db'])) {
                 return $app['mongodb.options.default_db'];
             }
@@ -32,9 +32,9 @@ class MongoDBServiceProvider implements ServiceProviderInterface
 
             // first database alias is the default
             return key($options);
-        };
+        });
 
-        $app['mongodb.connections.options_initializer'] = $app->protect(function() use ($app) {
+        $app['mongodb.connections.options_initializer'] = $app::protect(function() use ($app) {
             static $optionsInitialized = false;
 
             if ($optionsInitialized) {
@@ -68,7 +68,7 @@ class MongoDBServiceProvider implements ServiceProviderInterface
             $optionsInitialized = true;
         });
 
-        $app['mongodb.dbs.options_initializer'] = $app->protect(function() use ($app) {
+        $app['mongodb.dbs.options_initializer'] = $app::protect(function() use ($app) {
             static $optionsInitialized = false;
 
             if ($optionsInitialized) {
@@ -100,36 +100,36 @@ class MongoDBServiceProvider implements ServiceProviderInterface
             $optionsInitialized = true;
         });
 
-        $app['mongodb.clients'] = function (Container $app) {
+        $app['mongodb.clients'] = $app::share(function (\Pimple $app) {
             $app['mongodb.connections.options_initializer']();
 
-            $clients = new Container();
+            $clients = new \Pimple();
             foreach ($app['mongodb.options.connections'] as $name => $options) {
-                $clients[$name] = function () use ($options) {
+                $clients[$name] = $app::share(function () use ($options) {
                     return new Client(
                         $options['uri'],
                         $options['uriOptions'],
                         $options['driverOptions']
                     );
-                };
+                });
             }
 
             return $clients;
-        };
+        });
 
-        $app['mongodb.client'] = function (Container $app) {
+        $app['mongodb.client'] = $app::share(function (\Pimple $app) {
             $clients = $app['mongodb.clients'];
 
             // return Client, whose name is first in mongodb.options.connections
             return $clients[$app['mongodb.config.default_connection_name']];
-        };
+        });
 
-        $app['mongodb.dbs'] = function(Container $app) {
+        $app['mongodb.dbs'] = $app::share(function (\Pimple $app) {
             $app['mongodb.dbs.options_initializer']();
 
-            $dbs = new Container();
+            $dbs = new \Pimple();
             foreach ($app['mongodb.options.dbs'] as $name => $options) {
-                $dbs[$name] = function () use ($app, $name, $options) {
+                $dbs[$name] = $app::share(function () use ($app, $name, $options) {
                     if (!isset($app['mongodb.clients'][$options['connection']])) {
                         throw new \LogicException(
                             sprintf(
@@ -144,16 +144,20 @@ class MongoDBServiceProvider implements ServiceProviderInterface
 
                     /** @var Client $client */
                     return $client->selectDatabase($options['name'], $options['options']);
-                };
+                });
             }
 
             return $dbs;
-        };
+        });
 
-        $app['mongodb.db'] = function (Container $app) {
+        $app['mongodb.db'] = $app::share(function (\Pimple $app) {
             $dbAlias = $app['mongodb.config.default_db_name'];
 
             return $app['mongodb.dbs'][$dbAlias];
-        };
+        });
+    }
+
+    public function boot(Application $app)
+    {
     }
 }
