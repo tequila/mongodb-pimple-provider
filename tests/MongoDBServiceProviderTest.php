@@ -3,7 +3,7 @@
 namespace Tequila\Pimple\Provider\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Pimple\Container;
+use Silex\Application;
 use Tequila\MongoDB\Client;
 use Tequila\MongoDB\Database;
 use Tequila\Pimple\Provider\MongoDBServiceProvider;
@@ -216,7 +216,7 @@ class MongoDBServiceProviderTest extends TestCase
 
     private function createApp()
     {
-        $app = new Container();
+        $app = new Application();
         $app->register(new MongoDBServiceProvider());
 
         return $app;
